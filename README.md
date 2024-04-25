@@ -7,7 +7,7 @@ Its core functionality is to generate a maze of a user-specified size, and then,
 Maze generation is accomplished using disjoint sets, and is performed during construction of the Maze object. When a Maze is constructed, it will be populated with a randomly generated maze configuration. This configuration allows for only one entrance and exit, but ensures each and every cell within the maze is reachable from every other cell (a good maze uses all the area available to it).
 
 Associated public-facing methods:
- - Maze(int n, int m)
+ - **Maze(int n, int m)**
     - Input: Two ints representing the horizontal and vertical size of the maze, respectively.
     - Output: a reference to a new Maze object with a randomly generated maze.
 
@@ -15,12 +15,78 @@ Associated public-facing methods:
 Maze solving is also implemented within the maze class. It's performed using an implementation of Dijkstra's algorithm - each cell is considered a vertex, and has a cost associated with it (distance from start to that cell). The path is a sequence which doesn't skip any steps but also doesn't take any unnecessary ones.
 
 Associated public-facing mehtods:
- - solve()
+ - **solve()**
     - Input: Nothing
     - Output: a String with the path from start to finish written in cardinal direction instructions (i.e. "EESWSEE").
 
+ - **printMaze**
+    - Detailed below
+
 # Maze Printing
-TODO
+ - **printMaze(boolean solutionMode)**
+    - Input: A boolean representing whether or not to show the solution path. If true, outputs an `@` for each cell in the solution path.
+    - Output: Prints an ASCII representation of the maze to screen.
+        - `]`, `-` and `]` represent walls.
+        - `@` represents a solution.
+        - ` ` are navigable spaces. 
 
 # Disjoint Set Implementation
 This was just a super straightforward implmentation. It was done only with ints, no generics, and employs union by rank and path compression.
+
+# Sample
+```
+Enter the number of rows, n (0 to exit):
+> 10
+Enter the number of columns, m (0 to exit):
+> 10
+Maze is done generating!
+  []-[]-[]-[]-[]-[]-[]-[]-[]-[
+     [] [] []             [] [
+]-[] [] [] [] []-[] [] [] [] [
+]                [] [] []    [
+]-[]-[]-[] [] []-[] []-[]-[] [
+]       [] [] []    [] []    [
+]-[] []-[]-[] []-[] [] []-[] [
+]       []       []       [] [
+]-[] [] [] [] [] [] [] []-[]-[
+]    []    [] [] [] [] []    [
+]-[]-[]-[] []-[]-[]-[]-[] []-[
+] []       []    [] [] []    [
+] [] []-[] []-[] [] [] []-[] [
+] [] []                      [
+] []-[] []-[]-[]-[]-[]-[] [] [
+]    []       [] []       [] [
+]-[] [] []-[] [] [] [] []-[] [
+]          [] []    [] [] [] [
+] [] [] [] []-[] [] []-[] []-[
+] [] [] [] []    []
+]-[]-[]-[]-[]-[]-[]-[]-[]-[]
+
+Press Enter to see the solution.
+
+Here's how you'd solve it (Follow the '@'s).
+  []-[]-[]-[]-[]-[]-[]-[]-[]-[
+ @  @[] [] []             [] [
+]-[] [] [] [] []-[] [] [] [] [
+]   @  @  @  @   [] [] []    [
+]-[]-[]-[] [] []-[] []-[]-[] [
+]       [] []@[]    [] []    [
+]-[] []-[]-[] []-[] [] []-[] [
+]       []@  @   []       [] [
+]-[] [] [] [] [] [] [] []-[]-[
+]    []   @[] [] [] [] []    [
+]-[]-[]-[] []-[]-[]-[]-[] []-[
+] []      @[]    [] [] []    [
+] [] []-[] []-[] [] [] []-[] [
+] [] []   @  @  @  @  @  @   [
+] []-[] []-[]-[]-[]-[]-[] [] [
+]    []       [] []@  @  @[] [
+]-[] [] []-[] [] [] [] []-[] [
+]          [] []   @[] [] [] [
+] [] [] [] []-[] [] []-[] []-[
+] [] [] [] []    []@  @  @  @
+]-[]-[]-[]-[]-[]-[]-[]-[]-[]
+
+Your solution string was :
+ESEEESSWSSSEEEEESWWSSEEE
+```

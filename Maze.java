@@ -271,8 +271,10 @@ public class Maze{
         populateMaze();
     }
 
-    // Debug
-    public void printMazeArray(boolean solutionMode){
+    /*
+     * Prints the maze. If solution mode is enabled, an '@' symbol is placed in each cell in the solution path.
+     */
+    public void printMaze(boolean solutionMode){
         boolean[] solutionSet = {};
         if(solutionMode){
             int currentCell = 0;

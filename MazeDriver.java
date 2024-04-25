@@ -34,15 +34,15 @@ public class MazeDriver {
 
             Maze maze = new Maze(n, m);
             System.out.println("Maze is done generating!");
-            maze.printMazeArray(false);
+            maze.printMaze(false);
             
             
             System.out.println("\nPress Enter to see the solution.");
             s.nextLine();
             flush();
             System.out.println("Here's how you'd solve it (Follow the '@'s).");
-            maze.printMazeArray(true);
-            System.out.println("Your solution string was :\n" + maze.solve());
+            maze.printMaze(true);
+            System.out.println("\nYour solution string was :\n" + maze.solve());
         }
     }
 }
