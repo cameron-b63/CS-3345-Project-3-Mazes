@@ -37,7 +37,7 @@ public class Maze{
         switch(direction){
             case 0:{
                 // North: If original is not on first row
-                if(original - m > 0) { neighborIndex = original - m; }
+                if(original - m >= 0) { neighborIndex = original - m; }
                 break;
             }
             case 1:{
@@ -63,23 +63,53 @@ public class Maze{
     }
 
     /*
-     * All-around helper method. Clear the wall pertaining to a specific cell and its neighbor. Only called when pre-checks have already been passed.
+     * Helper method for maze generation. Clear the wall pertaining to a specific cell and its neighbor. Only called when pre-checks have already been passed.
      * Given the two cells to check, it should be immediately clear whether it's a horizontal or vertical boundary. Then, just clear the appropriate bit. Straightforward in nature.
      */
     private void clearWall(int c1, int c2){
         int lower = (c1 < c2) ? c1 : c2;
 
         if(c1 / m == c2 / m){
-            // Dealing with a horizontal boundary - lower cell needs its western wall cleared, and higher eastern
-            mazeArray[lower / m][lower % m] &= 0b11111110;
-            mazeArray[lower / m][(lower % m) + 1] &= 0b11111011;
+            // Dealing with a horizontal boundary - lower cell needs its eastern wall cleared, and higher western
+            mazeArray[lower / m][lower % m] &= 0b11111011;
+            mazeArray[lower / m][(lower % m) + 1] &= 0b111111110;
             return;
         }
 
-        // Dealing with a vertical boundary - lower cell needs its northern boundary removed, and higher southern
-        mazeArray[lower / m][lower % m] &= 0b11110111;
-        mazeArray[(lower / m) + 1][lower % m] &= 0b11111101;
+        // Dealing with a vertical boundary - lower-indexed cell needs its southern boundary removed, and higher northern
+        mazeArray[lower / m][lower % m] &= 0b11111101;
+        mazeArray[(lower / m) + 1][lower % m] &= 0b11110111;
         return;
+    }
+
+    /*
+     * Solve/Draw helper method. Outputs a truth value of whether a step from the passed cell is possible in the passed direction.
+     */
+    private boolean canStep(int cell, int direction){
+        int neighbor = getNeighborIndex(cell, direction);
+        if(neighbor == -1) return false; // If it's a boundary cell trying to do a boundary step we already implemented that logic
+        byte cellWalls = mazeArray[cell / m][cell % m];
+        switch(direction){
+            case 0:{
+                // N - check for north closure on current cell
+                if((cellWalls & 0b00001000) > 0) { return false; } break;
+            }
+            case 1:{
+                // E - check for east closure on cell
+                if((cellWalls & 0b00000100) > 0) { return false; } break;
+            }
+            case 2:{
+                // S - check for south closure
+                if((cellWalls & 0b00000010) > 0) { return false; } break;
+            }
+            case 3:{
+                // W - check west
+                if((cellWalls & 0b00000001) > 0) { return false; } break;
+            }
+        }
+
+        // If we fell through to here we are allowed to step
+        return true;
     }
 
     /*
@@ -118,6 +148,7 @@ public class Maze{
         int tryCell = -1;
         int tryDirection = -1;
         int tryNeighbor = -1;
+
         while(cellsNotConnected()){
             while(true){
                 tryCell = rand.nextInt(size);
@@ -127,9 +158,9 @@ public class Maze{
             while(triedDirections != 0b00001111){
                 tryDirection = rand.nextInt(4);
                 // The following code prevents hangs. I was pretty sure I had already checked for this case but guess not... (Looking back I understand why boundaries cause this issue)
-                triedDirections |= (1 << tryDirection);
+                triedDirections |= (1 << (3 - tryDirection));
                 tryNeighbor = getNeighborIndex(tryCell, tryDirection);
-                if(tryNeighbor != -1 && s.find(tryCell) != s.find(tryNeighbor)){
+                if(tryNeighbor != -1 && (s.find(tryCell) != s.find(tryNeighbor))){
                     clearWall(tryCell, tryNeighbor);
                     s.union(tryCell, tryNeighbor);
                     break;
@@ -141,12 +172,72 @@ public class Maze{
         return;
     }
 
-    // Accessors for other classes
-    public byte mazeStatus(int i, int j) { return mazeArray[i][j]; }
+    /*
+     * This method solves the maze using Dijkstra's algorithm. It assumes each cell to be a distance 1 from its adjacent neighbors.
+     * It performs a breadth-first search to fill in distances for each cell, and once the ending cell has been reached, steps backwards in distance to find the shortest path.
+     * This shortest path is returned as a string of cardinal directions (i.e. NESW).
+     * 
+     * The breadth-first search is accomplished using a queue - if a node can be traversed to from the current cell, it is enqueued to have its unvisited neighbors traversed.
+     * The first item in the queue is the starting node, which would enqueue either the south or east node, which would then enqueue all of its unvisited traversable neighbors.
+     * 
+     * The cost of each cell is recorded in a secondary array (default value -1 indicates not yet visited).
+     * While this could have been done recursively, I chose not to define it that way.
+     */
+    public String solve(){
+        Queue q;
+        String path = "";
+        int startingCell = 0;
+        int targetCell = n*m - 1;
+        int currentCell;
+        int[] costs = new int[n*m];
+        int neighborIndex;
+        
+        for(int i = 0; i < costs.length; i++){
+            costs[i] = -1; // Indicates not visited
+        }
 
-    // Solver's gonna want this one
-    public int dsFindWrapper(int toFind) { return s.find(toFind); }
+        costs[0] = 0;
+        q = new Queue();
+        q.enqueue(startingCell);
 
+        // Begin pathfinding: assign costs to non-visited neighbors until we assign a cost to the targetCell
+        while(!q.isEmpty()){
+            currentCell = q.dequeue();
+
+            // Check all directions with the same logic in the order NESW
+            for(int currentDirection = 0; currentDirection < 4; currentDirection++){
+                if(canStep(currentCell, currentDirection)){
+                    neighborIndex = getNeighborIndex(currentCell, currentDirection);
+                    // If not already visited, assign it a value one step up from current cell's cost
+                    if(costs[neighborIndex] == -1) {
+                        costs[neighborIndex] = costs[currentCell] + 1;
+                        q.enqueue(neighborIndex);
+                    }
+                }
+
+                // If we just hit the ending cell, let's skidaddle by satisfying the while-loop's exit condition
+                if(currentCell == targetCell) while(!q.isEmpty()) q.dequeue();
+            }
+        }
+
+        // Constructing path consists of stepping backwards, as I already discussed. We know the maze is possible, so this approach is sound.
+        int targetCost = costs[targetCell] - 1;
+        currentCell = targetCell;
+        // I made this array so I could write less code.
+        String[] toPrepend = {"S", "W", "N", "E"};
+        while(targetCost != -1){
+            for(int i = 0; i < 4; i++){
+                // If our found cell is north and we're moving backwards... we better prepend a move south to the path.
+                if(canStep(currentCell, i) && costs[getNeighborIndex(currentCell, i)] == targetCost){
+                    currentCell = getNeighborIndex(currentCell, i);
+                    path = toPrepend[i] + path;
+                    targetCost--;
+                    break;
+                }
+            }
+        }
+        return path;
+    }
 
     // Constructor
     public Maze(int n, int m){
@@ -162,10 +253,21 @@ public class Maze{
         }
 
         // Open the entrance and exits
-        mazeArray[0][0] = 0b00000110; // North and west are open
-        mazeArray[n-1][m-1] = 0b00001001; // South and east are open
+        mazeArray[0][0] = 0b00000110;
+        mazeArray[n-1][m-1] = 0b00001001;
 
         // Populate the maze
         populateMaze();
+    }
+
+    // Debug
+    public void printMazeArray(){
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < m; j++){
+                System.out.print(mazeArray[i][j]);
+                System.out.print(' ');
+            }
+            System.out.print('\n');
+        }
     }
 }

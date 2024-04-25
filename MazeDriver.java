@@ -7,8 +7,10 @@ public class MazeDriver {
      */
 
     public static void main(String[] args){
-        System.out.println("Hello, world!");
         Maze maze = new Maze(5, 5);
         System.out.println("Maze is done generating!");
+        maze.printMazeArray();
+        System.out.println("Here's how you'd solve it.");
+        System.out.println(maze.solve());
     }
 }
