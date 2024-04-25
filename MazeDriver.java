@@ -1,3 +1,5 @@
+import java.util.Scanner;
+
 public class MazeDriver {
     
     /*
@@ -6,11 +8,41 @@ public class MazeDriver {
      * This program contains the driver code to generate, draw, and solve an m x n maze on command.
      */
 
+     /*
+      * This method just flushes I/O for some prettier printing.
+      */
+    public static void flush(){
+        for(int i = 0; i < 30; i++){
+            System.out.println();
+        }
+        return;
+    }
+
     public static void main(String[] args){
-        Maze maze = new Maze(5, 5);
-        System.out.println("Maze is done generating!");
-        maze.printMazeArray();
-        System.out.println("Here's how you'd solve it.");
-        System.out.println(maze.solve());
+        Scanner s = new Scanner(System.in);
+        int n;
+        int m;
+        while(true){
+            System.out.print("Enter the number of rows, n (0 to exit):\n> ");
+            n = s.nextInt();
+            s.nextLine();
+            System.out.print("Enter the number of columns, m (0 to exit):\n> ");
+            m = s.nextInt();
+            s.nextLine();
+
+            if(n < 1 || m < 1){ s.close(); System.exit(0); }
+
+            Maze maze = new Maze(n, m);
+            System.out.println("Maze is done generating!");
+            maze.printMazeArray(false);
+            
+            
+            System.out.println("\nPress Enter to see the solution.");
+            s.nextLine();
+            flush();
+            System.out.println("Here's how you'd solve it (Follow the '@'s).");
+            maze.printMazeArray(true);
+            System.out.println("Your solution string was :\n" + maze.solve());
+        }
     }
 }

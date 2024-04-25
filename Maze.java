@@ -123,6 +123,17 @@ public class Maze{
         }
         return parentsEncountered > 1;
     }
+
+    /*
+     * Helper method for the maze printing. Returns an integer representing the direction denoted by a specific character. -1 represents unrecognized s but should never be needed.
+     */
+    private int toDirection(String s){
+        if(s.equals("N")) return 0;
+        if(s.equals("E")) return 1;
+        if(s.equals("S")) return 2;
+        if(s.equals("W")) return 3;
+        return -1;
+    }
     
     /*
      * The first part of some serious code for this project.
@@ -261,13 +272,62 @@ public class Maze{
     }
 
     // Debug
-    public void printMazeArray(){
-        for(int i = 0; i < n; i++){
-            for(int j = 0; j < m; j++){
-                System.out.print(mazeArray[i][j]);
-                System.out.print(' ');
+    public void printMazeArray(boolean solutionMode){
+        boolean[] solutionSet = {};
+        if(solutionMode){
+            int currentCell = 0;
+            String solution = this.solve();
+            solutionSet = new boolean[n*m];
+            for(int i = 0; i < solution.length(); i++){
+                solutionSet[currentCell] = true;
+                currentCell = getNeighborIndex(currentCell, toDirection(solution.substring(i, i+1)));
             }
-            System.out.print('\n');
+            solutionSet[n*m - 1] = true;
+
         }
+        for(int i = 0; i < n; i++){
+
+            // Top row
+            for(int j = 0; j < m; j++){
+                if((i+j == 0)){
+                    System.out.print("  [");
+                } else if(canStep((i*m + j), 0)){
+                    System.out.print("] [");
+                } else {
+                    System.out.print("]-[");
+                }
+            }
+            System.out.print("\n");
+
+            // Middle row
+            for(int j = 0; j < m; j++){
+                if(canStep(i*m + j, 3) || (i == 0 && j == 0)){
+                    System.out.print(" ");
+                } else {
+                    System.out.print("]");
+                }
+
+                if(solutionMode){
+                    if(solutionSet[i*m + j]){
+                        System.out.print("@");
+                    } else {
+                        System.out.print(" ");
+                    }
+                } else {
+                    System.out.print(" ");
+                }
+
+                if(canStep(i*m + j, 1) || (i == n-1 && j == m-1)){
+                    System.out.print(" ");
+                } else {
+                    System.out.print("[");
+                }
+            }
+            System.out.print("\n");
+        }
+        for(int i = 0; i < m-1; i++){
+            System.out.print("]-[");
+        }
+        System.out.print("]  \n");
     }
 }
